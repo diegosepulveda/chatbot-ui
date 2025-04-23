@@ -32,6 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <title>Diego</title>
       <body 
         className={cn(
           'min-h-screen bg-background font-sans antialiased',

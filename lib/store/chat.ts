@@ -22,7 +22,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  send: async (text: string) => {
+  send: async (text) => {
+    /* user bubble */
     const userMsg: Message = {
       id: nanoid(),
       content: text,
@@ -31,17 +32,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
     set(s => ({ messages: [...s.messages, userMsg] }));
 
-    try {
-      const { response } = await sendUserMessage(text);
-      const botMsg: Message = {
-        id: nanoid(),
-        content: response,
-        role: 'assistant',
-        timestamp: new Date().toISOString()
-      };
-      set(s => ({ messages: [...s.messages, botMsg] }));
-    } catch (err) {
-      console.error('chat error', err);
-    }
-  }
+    /* assistant typing placeholder */
+    const placeholderId = nanoid();
+    set(s => ({
+      messages: [
+        ...s.messages,
+        {
+          id: placeholderId,
+          content: '...',          // will be animated in UI
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+          placeholder: true        // ⟵ flag
+        } as Message
+      ]
+    }));
+
+    /* API call */
+    const { response, url } = await sendUserMessage(text);
+
+    /* replace placeholder with real answer */
+    set(s => ({
+      messages: s.messages.map(m =>
+        m.id === placeholderId
+          ? {
+              ...m,
+              content: response,
+              placeholder: false,
+              url,
+              count: url ? Math.floor(Math.random() * 40) + 1 : undefined
+            }
+          : m
+      )
+    }));
+  },
 }));
